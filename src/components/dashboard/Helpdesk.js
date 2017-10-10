@@ -78,27 +78,82 @@ class Helpdesk extends Component {
         });
     }
 
+    /* Handles the priority status change */
+    handlePriorityChange = (e) => {
+        this.setState({
+            selectedPriorityStatus: e.target.value
+        });
+    }
+
+    /* Handles the Escalation level change */
+    handleEscalationChange = (e) => {
+        this.setState({
+            selectedEscalation: e.target.value
+        });
+    }
+
     /* Click assign button */
     assignTicketToTech = () => {
-        if(this.state.selectedTech === null) {
-            return;
+       if(this.state.selectedTech != null && this.state.selectedPriorityStatus != null && this.state.selectedEscalation != null){
+           /* Add assigned ticket+tech into database*/
+           const data = {};
+           data['ticket/' + this.state.selectedTicket.id] = {
+               ticket_id: this.state.selectedTicket.id,
+               user_id: this.state.selectedTech, // stored Tech ID
+           };
+           firebase.database().ref().update(data)
+
+           /*Sending the priority status and Escalation Level data to SQL via API*/
+           fetch(apiurl + '/api/tickets/' + this.state.selectedTicket.id +'/update', {
+               method: 'POST',
+               headers: {
+                   'Accept': 'application/json',
+                   'Content-Type': 'application/json',
+               },
+               body: JSON.stringify({
+                   status: 'Pending'
+               })
+           })
+
+           fetch(apiurl + '/api/tickets/' + this.state.selectedTicket.id +'/updatePriority', {
+               method: 'POST',
+               headers: {
+                   'Accept': 'application/json',
+                   'Content-Type': 'application/json',
+               },
+               body: JSON.stringify({
+                   priority: this.state.selectedPriorityStatus
+               })
+           })
+
+           fetch(apiurl + '/api/tickets/' + this.state.selectedTicket.id +'/updateEscalation', {
+               method: 'POST',
+               headers: {
+                   'Accept': 'application/json',
+                   'Content-Type': 'application/json',
+               },
+               body: JSON.stringify({
+                   escalationLevel: this.state.selectedEscalation
+               })
+           })
+           alert('Tech successfully assigned to ticket!');
+           window.location.reload();
+       }
+        else{
+            if(this.state.selectedTech == null) {
+                alert('Please select the Tech User.');
+            }
+            if(this.state.selectedPriorityStatus == null){
+                alert('Please add priority status.');
+            }
+            if(this.state.selectedEscalation == null) {
+                alert('Please add escalation level.');
+            }
         }
 
-        /* Add assigned ticket+tech into database*/
-        const data = {};
-        data['ticket/' + this.state.selectedTicket.id] = {
-            ticket_id: this.state.selectedTicket.id,
-            user_id: this.state.selectedTech // stored Tech ID
-        };
-        firebase.database().ref().update(data)
-        alert('Tech successfully assigned to ticket!');
-        window.location.reload();
     }
 
     /* Render the page! */
-    /* TODO : Complete in your own time:
-        Do you think you could split this page into separate sub-components?
-     */
     render () {
         const vm = this
         const { selectedTicket, tickets, techUsers } = this.state
@@ -106,16 +161,15 @@ class Helpdesk extends Component {
         return (
             <div>
                 <Row>
-                    <Col md={(selectedTicket !== null ? 7 : 12)}>
-                        <h1>Pending Tickets</h1>
+                    <Col md={(selectedTicket !== null ? 6 : 12)}>
+                        <h2>Pending Tickets</h2>
                         {tickets.length < 1 && (
                             <p className="alert alert-info">There are no tickets to display.</p>
                         )}
                         <Table striped hover>
                             <thead>
                             <tr>
-                                <th>TicketID</th>
-                                <th>User</th>
+                                <th>Ticket ID</th>
                                 <th>Issue</th>
                                 <th>Actions</th>
                             </tr>
@@ -124,7 +178,6 @@ class Helpdesk extends Component {
                             {tickets.map((ticket, i) => (
                                 <tr key={i}>
                                     <td>{ticket.id}</td>
-                                    <td>{ticket.name}</td>
                                     <td>{ticket.issue}</td>
                                     <td>
                                         <Button bsStyle={vm.state.selectedTicket !== null && vm.state.selectedTicket.id === ticket.id ? 'success' : 'info'} onClick={() => vm.ticketDetailsClick(ticket)}>More Details</Button>
@@ -135,18 +188,19 @@ class Helpdesk extends Component {
                         </Table>
                     </Col>
                     {selectedTicket !== null && (
-                        <Col md={5}>
+                        <Col md={6}>
                             <Jumbotron style={{padding: 10}}>
-                                <Button block bsStyle="danger" onClick={this.closeDialogClick}>Close Dialog</Button>
-                                <h3 className="text-uppercase">Ticket Details</h3>
-                                <p><b>TicketID: </b>{selectedTicket.id}</p>
-                                <p><b>User: </b>{selectedTicket.name}</p>
-                                <p><b>Title: </b><br/>{selectedTicket.issue}</p>
-                                <p><b>Comment: </b><br/>{selectedTicket.comment}</p>
-                                {techUsers.length > 0 && (
+                                <h4 className="text-uppercase">Ticket Details</h4><hr/>
+                                <b>Ticket ID: </b>{selectedTicket.id}<br/>
+                                <b>User: </b>{selectedTicket.name}<br/>
+                                <b>Title: </b>{selectedTicket.issue}<br/><br/>
+                                <b>Operating System: </b>{selectedTicket.os}<br/>
+                                <b>Description: </b>{selectedTicket.description}<br/>
+                                {techUsers.length >= 0 && (
                                     <div>
                                         <hr/>
-                                        <h3 className="text-uppercase">Assign to tech</h3>
+                                        {/*Assign to Tech*/}
+                                        <h5 className="text-uppercase">Assign to tech</h5>
                                         <select className="form-control" onChange={this.handleTechChange} defaultValue="-1">
                                             <option value="-1" defaultValue disabled>Select a tech user</option>
                                             {techUsers.map((user, i) => (
@@ -154,8 +208,28 @@ class Helpdesk extends Component {
                                             ))}
                                         </select>
 
+                                        {/*Change Priority*/}
+                                        <h5 className="text-uppercase">Add priority</h5>
+                                        <select className="form-control" onChange={this.handlePriorityChange} defaultValue="-1">
+                                            <option value="-1" defaultValue disabled>Select Priority</option>
+                                                <option>low</option>
+                                                <option>moderate</option>
+                                                <option>high</option>
+                                        </select>
+
+                                        {/*change Escalation level*/}
+                                        <h5 className="text-uppercase">Add Escalation level</h5>
+                                        <select className="form-control" onChange={this.handleEscalationChange} defaultValue="-1">
+                                            <option value="-1" defaultValue disabled>Select level</option>
+                                            <option>1</option>
+                                            <option>2</option>
+                                            <option>3</option>
+                                        </select>
+
+                                        {/*Button event to assign tech*/}
                                         <div className="clearfix"><br/>
-                                            <Button className="pull-right" bsStyle="success" onClick={this.assignTicketToTech}>Assign</Button>
+                                            <Button bsStyle="danger" onClick={this.closeDialogClick}>Close Dialog</Button>
+                                            <Button className="pull-right" bsStyle="success" id={selectedTicket.id} onClick={this.assignTicketToTech}>Assign</Button>
                                         </div>
                                     </div>
                                 )

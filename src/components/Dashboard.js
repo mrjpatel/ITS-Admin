@@ -9,14 +9,17 @@ class Dashboard extends Component {
             <div>
                 <Grid>
                     <Row className="show-grid">
-                        <Col md={3}>
+                        <Col md={2}>
+                            {/*
+                            * User Profile Picture
+                            */}
                             <Jumbotron style={{padding: 10}} className="text-center">
-                                <img src={this.props.user.photoURL} className="img-responsive img-circle" style={{padding:20}} />
-                                <h4 className="text-uppercase">Hello</h4>
-                                <h3>{this.props.user.displayName}</h3>
+                                <img src={this.props.user.photoURL} className="img-responsive img-circle" alt="profile pic" style={{padding:20}} />
+                                <h5 className="text-uppercase">Hello</h5>
+                                <h4>{this.props.user.displayName}</h4>
                             </Jumbotron>
                         </Col>
-                        <Col md={9}>
+                        <Col md={10}>
                             {this.props.type === 'helpdesk' ? (
                                     <Helpdesk />
                                 )

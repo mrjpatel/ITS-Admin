@@ -5,6 +5,7 @@ import App from './App';
 import registerServiceWorker from './registerServiceWorker';
 import firebase from 'firebase';
 import {BrowserRouter} from "react-router-dom";
+
 const config = {
     apiKey: "AIzaSyCdmTEy9vmZItRtWQDgimYMZAkeo2zqgzE",
     authDomain: "test1-fda03.firebaseapp.com",
