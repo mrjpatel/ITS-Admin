@@ -37,7 +37,7 @@ class Tech extends Component {
     //Click event for the post comment
     submitComment = (e) => {
         if(this.state.text === null)  {
-            alert('Please respond to the request!');
+            alert('Please respond to the ticket!');
             return;
         }
 
@@ -66,6 +66,25 @@ class Tech extends Component {
             })
         })
         alert("Comment successfully Added");
+    }
+
+    escalateTicket = (e) => {
+        if(this.state.selectedEscalation === null)  {
+            alert('Please select the escalation!');
+            return;
+        }
+
+        fetch(apiurl + '/api/tickets/' + e.target.id +'/updateEscalation', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                escalationLevel: this.state.selectedEscalation
+            })
+        })
+        alert("Ticket successfully Escalated");
     }
 
     componentDidMount() {
@@ -130,6 +149,7 @@ class Tech extends Component {
                                     <option>2</option>
                                     <option>3</option>
                                 </select></p>
+                                <Button className="form-control" bsStyle="success" id={ticket.id} onClick={this.escalateTicket}>Escalate Ticket</Button>
                             </Panel>
                         ))}
                 </Col>
